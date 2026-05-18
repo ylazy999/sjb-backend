@@ -14,14 +14,17 @@ import websocket
 import ssl
 from wsgiref.handlers import format_date_time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', static_url_path='')
 CORS(app)
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'user.db')
+# 数据库路径
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user.db')
+
+# 前端静态文件路径 - 从项目根目录的 dist/build/h5 复制过来
+FRONTEND_DIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')
 
 # Railway 环境变量
 PORT = int(os.environ.get("PORT", 5000))
-RAILWAY_STATIC_URL = os.environ.get("RAILWAY_STATIC_URL", "")
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -47,6 +50,36 @@ def init_db():
     conn.close()
 
 init_db()
+
+# ========== 前端静态文件服务 ==========
+
+@app.route('/')
+def index():
+    index_path = os.path.join(FRONTEND_DIST_PATH, 'index.html')
+    if os.path.exists(index_path):
+        return send_from_directory(FRONTEND_DIST_PATH, 'index.html')
+    return jsonify({
+        "message": "球球AI体育分析服务",
+        "version": "1.0",
+        "endpoints": {
+            "user_login": "/api/users/login",
+            "user_list": "/api/users/list",
+            "user_add": "/api/users/add",
+            "user_delete": "/api/users/delete",
+            "chat": "/api/qiuqiu/chat",
+            "analyze_match": "/api/qiuqiu/analyze-match"
+        }
+    })
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    file_path = os.path.join(FRONTEND_DIST_PATH, filename)
+    if os.path.exists(file_path):
+        return send_from_directory(FRONTEND_DIST_PATH, filename)
+    # 如果是 SPA 路由，返回 index.html
+    if not filename.startswith('api/'):
+        return send_from_directory(FRONTEND_DIST_PATH, 'index.html')
+    return jsonify({"error": "Not found"}), 404
 
 # ========== 用户管理API ==========
 
@@ -277,7 +310,7 @@ def chat_with_qiuqiu():
             conversation_history[user_id] = [
                 {
                     "role": "system",
-                    "content": "你是球球，一个专业的体育赛事分析师。你的任务是帮助用户分析体育比赛、预测结果、解读球队数据等。请用友好、专业的语气回答用户的问题。"
+                    "content": "你是球球，一个专业的体育赛事分析师。"
                 }
             ]
         
@@ -379,27 +412,10 @@ def clear_history():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
-@app.route('/')
-def index():
-    return jsonify({
-        "message": "球球AI体育分析服务",
-        "version": "1.0",
-        "endpoints": {
-            "user_login": "/api/users/login",
-            "user_list": "/api/users/list",
-            "user_add": "/api/users/add",
-            "user_delete": "/api/users/delete",
-            "chat": "/api/qiuqiu/chat",
-            "analyze_match": "/api/qiuqiu/analyze-match",
-            "clear_history": "/api/qiuqiu/clear-history"
-        }
-    })
-
 if __name__ == '__main__':
     print("=" * 50)
     print("球球AI体育分析服务启动中...")
     print("=" * 50)
     print(f"服务地址: http://0.0.0.0:{PORT}")
-    print(f"API文档: http://0.0.0.0:{PORT}/")
     print("=" * 50)
     app.run(host='0.0.0.0', port=PORT, debug=True)
