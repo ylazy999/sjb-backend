@@ -45,7 +45,7 @@ def init_db():
          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)''')
     cursor = conn.execute("SELECT COUNT(*) FROM admins")
     if cursor.fetchone()[0] == 0:
-        conn.execute("INSERT INTO admins (username, password) VALUES ('admin', 'admin123')")
+        conn.execute("INSERT INTO admins (username, password) VALUES ('YSYS', '123456')")
     conn.commit()
     conn.close()
 
