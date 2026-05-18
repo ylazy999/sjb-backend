@@ -14,13 +14,13 @@ import websocket
 import ssl
 from wsgiref.handlers import format_date_time
 
-app = Flask(__name__, static_folder='static', static_url_path='')
+app = Flask(__name__)
 CORS(app)
 
 # 数据库路径
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'user.db')
 
-# 前端静态文件路径 - 从项目根目录的 dist/build/h5 复制过来
+# 前端静态文件路径
 FRONTEND_DIST_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend')
 
 # Railway 环境变量
