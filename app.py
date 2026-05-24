@@ -51,13 +51,11 @@ def init_db():
 
 init_db()
 
-# ========== 前端静态文件服务 ==========
+# ========== API Routes Only ==========
+# Frontend is deployed separately
 
 @app.route('/')
 def index():
-    index_path = os.path.join(FRONTEND_DIST_PATH, 'index.html')
-    if os.path.exists(index_path):
-        return send_from_directory(FRONTEND_DIST_PATH, 'index.html')
     return jsonify({
         "message": "球球AI体育分析服务",
         "version": "1.0",
@@ -70,16 +68,6 @@ def index():
             "analyze_match": "/api/qiuqiu/analyze-match"
         }
     })
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    file_path = os.path.join(FRONTEND_DIST_PATH, filename)
-    if os.path.exists(file_path):
-        return send_from_directory(FRONTEND_DIST_PATH, filename)
-    # 如果是 SPA 路由，返回 index.html
-    if not filename.startswith('api/'):
-        return send_from_directory(FRONTEND_DIST_PATH, 'index.html')
-    return jsonify({"error": "Not found"}), 404
 
 # ========== 用户管理API ==========
 
